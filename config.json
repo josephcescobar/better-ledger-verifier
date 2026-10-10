@@ -1,7 +1,7 @@
 {
   "network": "mainnet",
   "anchorAddress": "DWHfzWyQubYPMweTRugS3o6L69aHtxX8szS8rXJJy2qC",
-  "unsealedGraceMinutes": 10,
+  "unsealedGraceMinutes": 30,
   "anchorStaleHours": 25,
   "anchorSendingStuckMinutes": 30,
   "failedAnchorsInARow": 3,
