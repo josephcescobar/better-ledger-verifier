@@ -1,0 +1,58 @@
+// Every reward_type a Rewards row may carry (ledger master plan, Stage B4).
+// The ledger verifier flags any row whose type is not listed here, so a
+// new earn or spend path must add its type in the same commit. Legacy
+// types stay listed so their historical rows keep verifying.
+export const LEDGER_REWARD_TYPES = [
+  // Platform rewards (USD-anchored, tiered for free members)
+  "DAILY_CHECKIN",
+  "TIME_ON_PLATFORM",
+  "TOOLTIP_EARN",
+  "REFERRAL_CODE_CREATION",
+  "REFERRAL_ONBOARD",
+  "VOLUME_GENERATION",
+  "SHARE_BETTER",
+  "SHARE_BETTER_REVOKED",
+  "CREATOR_SIGNUP",
+  "PREMIUM_LISTING",
+  "TX_PASSWORD_SET",
+  "RECOVERY_EMAIL_SET",
+  "YUBIKEY_CONNECT",
+  "PRO_SIGNUP",
+  "LEADERBOARD_BONUS",
+  // Early adopter campaign
+  "EARLY_ADOPTER_BONUS",
+  "EARLY_ADOPTER_RESET",
+  // Purchases, Pro and fees
+  "BTR_PURCHASE",
+  "PRO_PURCHASE",
+  "PRO_RENEWAL_BONUS",
+  "VERIFICATION_FEE_REBATE",
+  // Funded bounties (escrow) and their reversals
+  "DAPP_BOUNTY",
+  "DAPP_BOUNTY_REVOKED",
+  "CREATOR_BOUNTY",
+  "CREATOR_BOUNTY_REVOKED",
+  "BTR_SPEND_BOUNTY_CLAIM",
+  "BTR_SPEND_BOUNTY_CLAIM_REVOKED",
+  "BTR_SPEND_CREATOR_BOUNTY",
+  "BTR_SPEND_CREATOR_BOUNTY_REVOKED",
+  // Partake
+  "PARTAKE_CLAIM",
+  "BTR_SPEND_PARTAKE",
+  // Spends: store, events, handles, Legends
+  "STORE_PURCHASE",
+  "STORE_CREDIT",
+  "EVENT_BOOST",
+  "REFERRAL_CODE_PURCHASE",
+  "REFERRAL_STAMP_PURCHASE",
+  "REFERRAL_STAMP_RETRIES",
+  "REFERRAL_STAMP_EYES",
+  // Legacy: no longer written, kept so old rows verify
+  "PRO_REFERRER_BONUS",
+  "REFERRAL_STAMP_WREATH",
+  "IRL_BOUNTY",
+  "BTR_SPEND_IRL_BOUNTY",
+  "BTR_SPEND_IRL_CANCEL",
+] as const;
+
+export type LedgerRewardType = (typeof LEDGER_REWARD_TYPES)[number];

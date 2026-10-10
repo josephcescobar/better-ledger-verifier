@@ -1,0 +1,78 @@
+name: Verify ledger
+
+on:
+  schedule:
+    - cron: "7,37 * * * *" # every 30 minutes, off the hour to dodge GitHub's busiest minute
+  workflow_dispatch:
+    inputs:
+      full:
+        description: Re-read every anchor from Solana (ignore the cache)
+        type: boolean
+        default: false
+
+# One run at a time, so two runs never race on the state branch.
+concurrency:
+  group: verify
+  cancel-in-progress: false
+
+permissions:
+  contents: write # push the state branch only
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - run: npm ci
+
+      - run: npm test
+
+      # Run state (anchor cache, alert history, signed latest report) lives
+      # on its own branch so main only ever holds code.
+      - name: Load state
+        run: |
+          git config --global user.name "ledger-verifier"
+          git config --global user.email "ledger-verifier@users.noreply.github.com"
+          if git ls-remote --exit-code --heads origin state >/dev/null; then
+            git fetch --depth=1 origin state:state
+            git worktree add state state
+          else
+            git worktree add --orphan -b state state
+          fi
+
+      - name: Verify
+        id: verify
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DATABASE_CA_CERT: ${{ secrets.DATABASE_CA_CERT }}
+          SOLANA_RPC_URL: ${{ secrets.SOLANA_RPC_URL }}
+          LEDGER_SALT_SECRET: ${{ secrets.LEDGER_SALT_SECRET }}
+          STRIPE_READ_KEY: ${{ secrets.STRIPE_READ_KEY }}
+          VERIFIER_SIGNING_KEY: ${{ secrets.VERIFIER_SIGNING_KEY }}
+          REPORT_URL: ${{ vars.REPORT_URL }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          ALERT_EMAIL_FROM: ${{ vars.ALERT_EMAIL_FROM }}
+          ALERT_EMAIL_TO: ${{ vars.ALERT_EMAIL_TO }}
+          ALERT_WEBHOOK_URL: ${{ secrets.ALERT_WEBHOOK_URL }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ vars.TELEGRAM_CHAT_ID }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          STATE_DIR: state
+        run: node src/main.ts ${{ inputs.full && '--full' || '' }}
+
+      # Saved even when the run found problems, so alerts aren't repeated.
+      - name: Save state
+        if: always()
+        run: |
+          cd state
+          [ -f state.json ] || exit 0
+          git add state.json latest.json
+          git commit -q -m "Run ${{ github.run_id }}" || exit 0
+          git push -q origin state

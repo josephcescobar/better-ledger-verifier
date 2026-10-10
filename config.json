@@ -1,0 +1,34 @@
+{
+  "network": "mainnet",
+  "anchorAddress": "DWHfzWyQubYPMweTRugS3o6L69aHtxX8szS8rXJJy2qC",
+  "unsealedGraceMinutes": 10,
+  "anchorStaleHours": 25,
+  "anchorSendingStuckMinutes": 30,
+  "failedAnchorsInARow": 3,
+  "stripeWindowDays": 30,
+  "stripeWebhookGraceMinutes": 15,
+  "rules": {
+    "oneTimePerUser": [
+      "EARLY_ADOPTER_BONUS",
+      "REFERRAL_CODE_CREATION",
+      "TX_PASSWORD_SET",
+      "RECOVERY_EMAIL_SET",
+      "YUBIKEY_CONNECT",
+      "CREATOR_SIGNUP"
+    ],
+    "dailyWindowStartHourUtc": 12,
+    "dailyCaps": {
+      "DAILY_CHECKIN": 1,
+      "TIME_ON_PLATFORM": 4,
+      "TOOLTIP_EARN": 10
+    },
+    "maxCreditBtr": "10000",
+    "maxCreditBtrByType": {},
+    "adminSourcePrefixes": ["early_adopter_arm:", "admin:"],
+    "adminRewardTypes": ["EARLY_ADOPTER_RESET"],
+    "adminAlertHours": 24
+  },
+  "alerts": {
+    "repeatHours": 6
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "name": "better-ledger-verifier",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Independent verifier for the BETTER $BTR ledger: hash chain, Solana anchors, business rules and Stripe reconciliation.",
+  "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "verify": "node --env-file-if-exists=.env src/main.ts",
+    "test": "node --test \"test/*.test.ts\"",
+    "typecheck": "tsc --noEmit",
+    "keygen": "node scripts/keygen.ts",
+    "drift": "node scripts/check-drift.ts"
+  },
+  "dependencies": {
+    "pg": "^8.13.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "@types/pg": "^8.11.0",
+    "typescript": "^5.9.0"
+  }
+}

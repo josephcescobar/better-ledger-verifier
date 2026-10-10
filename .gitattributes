@@ -1,0 +1,2 @@
+# LF everywhere: src/vendor/ must stay byte-identical to the app's files.
+* text=auto eol=lf
