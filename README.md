@@ -5,7 +5,7 @@ An independent check of the BETTER $BTR ledger, run outside Vercel and Supabase.
 1. **Chain**: recomputes every `row_hash` from `Rewards` + `RewardsSeal` and reports the first break.
 2. **Coverage**: every `Rewards` row older than 30 minutes is sealed (the app seals every 15 minutes, skipping rows under 2 minutes old), and no seal points at a missing row.
 3. **Anchors**: reads the anchoring wallet's memos straight from Solana, through a different RPC provider than the app's, and checks each memo against the ledger it recomputed: chain head, history root (MMR), $BTR total, account count, and the balance root when `LEDGER_SALT_SECRET` is set. It also cross-checks the app's `LedgerAnchor` table against the chain in both directions, and warns when anchoring stalls or keeps failing.
-4. **Business rules**: known `reward_type`, well-formed amounts, sign of Â±1, no negative balances, one-time rewards credited once, daily caps, a maximum credit size, and recent admin-path writes (limits in `config.json`).
+4. **Business rules**: known `reward_type`, well-formed amounts, sign of ±1, no negative balances, one-time rewards credited once, daily caps, a maximum credit size, and recent admin-path writes (limits in `config.json`).
 5. **Stripe**: every `BTR_PURCHASE` row is backed by a succeeded PaymentIntent for the same account and amount at the $0.10 peg, every succeeded $BTR PaymentIntent in the last 30 days was credited exactly once, and refunds and disputes are listed.
 
 Each run writes a signed report (`latest.json`, Ed25519) and its state to the `state` branch, sends alerts for new problems, and fails the Actions run when anything needs attention. GitHub's own failed-run email then works as a backup alert.
