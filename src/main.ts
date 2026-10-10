@@ -25,7 +25,8 @@ import { loadConfig, type Config, type Finding } from "./types.ts";
 //   STATE_DIR             default ./state
 //   RUN_URL               link to this run, put in alerts (set by the workflow)
 // Alert channels: see src/alerts.ts.
-// Flags: --full re-reads every anchor from Solana; --no-alerts skips alerts.
+// Flags: --full re-reads every anchor from Solana; --no-alerts skips alerts;
+// --test-alert only sends a test message through every configured channel.
 
 type State = { anchors: AnchorCache; alerts: AlertState; stripe: StripeState };
 
@@ -128,6 +129,23 @@ async function runChecks(env: NodeJS.ProcessEnv, config: Config, state: State) {
 async function main() {
   const env = process.env;
   const args = new Set(process.argv.slice(2));
+  if (args.has("--test-alert")) {
+    // Sends one message through every configured channel and stops; no
+    // checks run and the alert history is left alone.
+    const test: Finding = {
+      check: "test",
+      severity: "warning",
+      key: "test-alert",
+      message: "Test alert from the ledger verifier. If you can read this, alerts reach you.",
+    };
+    const errors = await deliver({ send: [test], resolved: [], state: { alerted: {} } }, env);
+    const channels = [env.RESEND_API_KEY && env.ALERT_EMAIL_FROM && env.ALERT_EMAIL_TO, env.ALERT_WEBHOOK_URL, env.TELEGRAM_BOT_TOKEN && env.TELEGRAM_CHAT_ID].filter(Boolean).length;
+    if (!channels) errors.push("no alert channel is configured");
+    for (const e of errors) console.error(`Test alert failed: ${e}`);
+    console.log(errors.length ? "Test alert: FAILED" : `Test alert sent to ${channels} channel(s)`);
+    if (errors.length) process.exitCode = 1;
+    return;
+  }
   for (const name of ["DATABASE_URL", "SOLANA_RPC_URL"]) {
     if (!env[name]) throw new Error(`${name} is not set`);
   }

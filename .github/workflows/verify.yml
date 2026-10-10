@@ -9,6 +9,10 @@ on:
         description: Re-read every anchor from Solana (ignore the cache)
         type: boolean
         default: false
+      test_alert:
+        description: Only send a test alert (no checks)
+        type: boolean
+        default: false
 
 # One run at a time, so two runs never race on the state branch.
 concurrency:
@@ -65,7 +69,7 @@ jobs:
           TELEGRAM_CHAT_ID: ${{ vars.TELEGRAM_CHAT_ID }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           STATE_DIR: state
-        run: node src/main.ts ${{ inputs.full && '--full' || '' }}
+        run: node src/main.ts ${{ inputs.full && '--full' || '' }} ${{ inputs.test_alert && '--test-alert' || '' }}
 
       # Saved even when the run found problems, so alerts aren't repeated.
       - name: Save state
