@@ -27,6 +27,9 @@ export const LEDGER_REWARD_TYPES = [
   // Admin-resolved refund or dispute of a BTR_PURCHASE (master plan F3):
   // sign -1, source_id = the PaymentIntent id.
   "BTR_PURCHASE_REVERSAL",
+  // Admin-resolved refund or chargeback of a card-paid Pro membership or
+  // identity fee: takes back its rebate (sign -1, source_id = the rebate's).
+  "CARD_REBATE_REVERSAL",
   "PRO_PURCHASE",
   "PRO_RENEWAL_BONUS",
   "VERIFICATION_FEE_REBATE",
