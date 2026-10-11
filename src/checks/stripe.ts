@@ -66,6 +66,19 @@ export async function checkStripe(input: {
   const byId = new Map(intents.map((pi) => [pi.id, pi]));
 
   const purchases = input.rows.filter((r) => r.reward_type === "BTR_PURCHASE");
+  // Net $BTR taken back per PaymentIntent (BTR_PURCHASE_REVERSAL rows: -1
+  // takes back, +1 gives back when a refund failed), in 10^-4 units.
+  const reversedUnits = new Map<string, bigint>();
+  for (const r of input.rows) {
+    if (r.reward_type !== "BTR_PURCHASE_REVERSAL" || !r.source_id) continue;
+    let u: bigint;
+    try {
+      u = amountUnits(r.reward_point);
+    } catch {
+      continue;
+    }
+    reversedUnits.set(r.source_id, (reversedUnits.get(r.source_id) ?? 0n) - u * BigInt(r.sign));
+  }
   const bySource = new Map<string, UnsealedRow[]>();
   for (const r of purchases) {
     const list = bySource.get(r.source_id ?? "") ?? [];
@@ -141,7 +154,24 @@ export async function checkStripe(input: {
       });
     }
     const charge = typeof pi.latest_charge === "object" ? pi.latest_charge : null;
-    if (charge && (charge.amount_refunded > 0 || charge.disputed)) {
+    // A refund whose $BTR is already taken back in the ledger (the admin
+    // Refund button does that first) is resolved: nothing to flag. The
+    // refunded cents convert at the purchase's own rate, since the charge
+    // may include a card processing fee (metadata fee_cents, 2026-10-11).
+    let settled = false;
+    if (charge && charge.amount_refunded > 0 && !charge.disputed && pi.amount_received > 0) {
+      let boughtUnits: bigint | null = null;
+      try {
+        boughtUnits = amountUnits(pi.metadata?.btr_amount ?? "");
+      } catch {
+        boughtUnits = null;
+      }
+      if (boughtUnits !== null) {
+        const owedUnits = (boughtUnits * BigInt(charge.amount_refunded)) / BigInt(pi.amount_received);
+        settled = (reversedUnits.get(pi.id) ?? 0n) >= owedUnits;
+      }
+    }
+    if (charge && !settled && (charge.amount_refunded > 0 || charge.disputed)) {
       open++;
       add("warning", `refund-or-dispute:${pi.id}:${charge.amount_refunded}:${charge.disputed}`, `PaymentIntent ${pi.id} was ${charge.disputed ? "disputed" : "refunded"}; resolve it on the admin ledger page`, {
         payment_intent: pi.id,
