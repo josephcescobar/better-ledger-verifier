@@ -12,7 +12,8 @@ import { loadConfig, type Config, type Finding } from "./types.ts";
 
 // One verifier run (Stage E3). Reads the ledger, checks it, writes a signed
 // report and the run state to STATE_DIR, sends alerts, and exits non-zero
-// if anything needs attention, so the GitHub Actions run fails visibly too.
+// on a critical finding or a check that couldn't run, so the GitHub Actions
+// run fails visibly too (warnings don't fail it; they alert once).
 //
 // Env:
 //   DATABASE_URL          ledger_verifier role (sql/readonly-role.sql), required
@@ -207,7 +208,11 @@ async function main() {
       `${counts.critical} critical, ${counts.warning} warning(s)`,
   );
   for (const f of findings) console.log(`- ${f.severity.toUpperCase()} [${f.check}] ${f.message}`);
-  if (!report.ok) process.exitCode = 1;
+  // The Actions run (and GitHub's failure email) fails only when something
+  // is seriously wrong: a critical finding, or a check that couldn't run at
+  // all. Warnings are emailed once by our own alerts and shown on
+  // /admin/ledger; failing on them made GitHub email on every run.
+  if (counts.critical > 0 || findings.some((f) => f.key.startsWith("verifier-error:"))) process.exitCode = 1;
 }
 
 main().catch((err) => {

@@ -8,7 +8,7 @@ An independent check of the BETTER $BTR ledger, run outside Vercel and Supabase.
 4. **Business rules**: known `reward_type`, well-formed amounts, sign of ±1, no negative balances, one-time rewards credited once, daily caps, a maximum credit size, and recent admin-path writes (limits in `config.json`).
 5. **Stripe**: every `BTR_PURCHASE` row is backed by a succeeded PaymentIntent for the same account and amount at the $0.10 peg, every succeeded $BTR PaymentIntent in the last 30 days was credited exactly once, and refunds and disputes are listed.
 
-Each run writes a signed report (`latest.json`, Ed25519) and its state to the `state` branch, sends alerts for new problems, and fails the Actions run when anything needs attention. GitHub's own failed-run email then works as a backup alert.
+Each run writes a signed report (`latest.json`, Ed25519) and its state to the `state` branch, sends alerts for new problems, and fails the Actions run on a critical finding or a check that couldn't run. GitHub's own failed-run email then works as a backup alert for the serious cases; warnings alert once and don't fail the run.
 
 It shares no code with the app at runtime. `src/vendor/` holds byte-identical copies of the app's encoder (`lib/ledger/canonical.ts`, `lib/ledger/trees.ts`, `lib/ledgerRewardTypes.ts`), and `test/fixtures.json` was produced by the app's own code, so `npm test` fails if the two ever disagree on a single byte.
 
