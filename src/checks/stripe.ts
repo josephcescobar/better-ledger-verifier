@@ -76,8 +76,12 @@ export async function checkStripe(input: {
   // Ledger -> Stripe. Rows already verified in an earlier run are skipped:
   // their PaymentIntent can't change amount or owner after it succeeded.
   const verified = new Set(input.state.verified_purchase_rows);
+  // Purchases made against the Stripe sandbox while the app used test keys
+  // (config.json knownSandboxPayments): a live key can't see them. Each was
+  // offset in the ledger by a BTR_PURCHASE_REVERSAL.
+  const sandbox = new Set(config.knownSandboxPayments.map((s) => s.payment_intent));
   for (const row of purchases) {
-    if (verified.has(row.reward_id)) continue;
+    if (verified.has(row.reward_id) || sandbox.has(row.source_id ?? "")) continue;
     const at = { reward_id: row.reward_id, source_id: row.source_id, user_id: row.user_id };
     if (!row.source_id?.startsWith("pi_")) {
       add("critical", `purchase-no-intent:${row.reward_id}`, "A BTR_PURCHASE row has no PaymentIntent id", at);

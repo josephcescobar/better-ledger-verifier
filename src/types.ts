@@ -24,6 +24,8 @@ export type Config = {
   failedAnchorsInARow: number;
   stripeWindowDays: number;
   stripeWebhookGraceMinutes: number;
+  /** Sandbox-mode purchases in the production ledger, skipped by the live-key Stripe check. */
+  knownSandboxPayments: { payment_intent: string; note: string }[];
   rules: {
     oneTimePerUser: string[];
     dailyWindowStartHourUtc: number;

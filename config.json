@@ -7,6 +7,12 @@
   "failedAnchorsInARow": 3,
   "stripeWindowDays": 30,
   "stripeWebhookGraceMinutes": 15,
+  "knownSandboxPayments": [
+    {
+      "payment_intent": "pi_3UPCVt2L305NALyI0Ds5EWhE",
+      "note": "Stripe sandbox test purchase ($20 = 200 $BTR) on the production ledger, 2026-10-11; fully reversed the same day with the admin Refund button (BTR_PURCHASE_REVERSAL)"
+    }
+  ],
   "rules": {
     "oneTimePerUser": [
       "EARLY_ADOPTER_BONUS",
