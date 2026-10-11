@@ -16,6 +16,8 @@ export type AlertState = {
   alerted: Record<string, string>;
 };
 
+const RUNBOOK_URL = "https://github.com/josephcescobar/better-ledger-verifier/blob/main/RUNBOOK.md";
+
 const id = (key: string) => createHash("sha256").update(key).digest("hex").slice(0, 32);
 
 export type AlertPlan = { send: Finding[]; resolved: string[]; state: AlertState };
@@ -45,6 +47,7 @@ function render(plan: AlertPlan, runUrl?: string): { subject: string; text: stri
   const lines = plan.send.map((f) => `${f.severity.toUpperCase()} [${f.check}] ${f.message}`);
   if (plan.resolved.length) lines.push(`Resolved since the last run: ${plan.resolved.length} finding(s).`);
   if (runUrl) lines.push(`Run: ${runUrl}`);
+  lines.push(`What to do: ${RUNBOOK_URL}`);
   return { subject, text: lines.join("\n") };
 }
 

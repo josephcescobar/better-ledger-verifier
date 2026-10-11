@@ -51,4 +51,4 @@ When the app adds a reward type, copy `lib/ledgerRewardTypes.ts` into `src/vendo
 - **critical**: the ledger or its anchors disagree with themselves (an edited or deleted row, an anchor that no longer matches, an anchor the app didn't record, a double credit). These re-alert every 6 hours until fixed.
 - **warning**: needs a person (sealing lag, anchoring stalled, a broken rule, paid but not credited, a refund or dispute, a check that couldn't run). These alert once.
 
-What to do for each is in the app repo's ledger incident runbook (`.codex/runbooks/ledger-incident.md`).
+What to do for each is in [RUNBOOK.md](RUNBOOK.md).
