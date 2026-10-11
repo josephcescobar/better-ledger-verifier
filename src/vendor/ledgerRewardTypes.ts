@@ -24,6 +24,9 @@ export const LEDGER_REWARD_TYPES = [
   "EARLY_ADOPTER_RESET",
   // Purchases, Pro and fees
   "BTR_PURCHASE",
+  // Admin-resolved refund or dispute of a BTR_PURCHASE (master plan F3):
+  // sign -1, source_id = the PaymentIntent id.
+  "BTR_PURCHASE_REVERSAL",
   "PRO_PURCHASE",
   "PRO_RENEWAL_BONUS",
   "VERIFICATION_FEE_REBATE",
