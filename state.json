@@ -119,9 +119,13 @@
     ]
   },
   "alerts": {
-    "alerted": {}
+    "alerted": {
+      "bc36617c128d628611e7a918fcb461a9": "2026-10-11T17:52:08.534Z"
+    }
   },
   "stripe": {
-    "verified_purchase_rows": []
+    "verified_purchase_rows": [
+      "fb275176-8e24-4cff-9a91-b76ba8e5a20f"
+    ]
   }
 }
