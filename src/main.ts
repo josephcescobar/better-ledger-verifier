@@ -177,7 +177,9 @@ async function main() {
   // full report only goes to the app.
   const plain = JSON.parse(json(report));
   const pub = { ...plain, findings: findings.map(({ detail: _detail, ...f }) => f) };
-  const signed = env.VERIFIER_SIGNING_KEY ? signReport(plain, env.VERIFIER_SIGNING_KEY) : null;
+  // aud "app" only on the copy sent to the app: the app refuses reports
+  // without it, so the public copy in this repo can't be replayed there.
+  const signed = env.VERIFIER_SIGNING_KEY ? signReport({ ...plain, aud: "app" }, env.VERIFIER_SIGNING_KEY) : null;
   const signedPub = env.VERIFIER_SIGNING_KEY ? signReport(pub, env.VERIFIER_SIGNING_KEY) : null;
   writeFileSync(join(stateDir, "latest.json"), json(signedPub ?? pub));
 
