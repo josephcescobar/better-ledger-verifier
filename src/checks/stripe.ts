@@ -101,8 +101,16 @@ export async function checkStripe(input: {
       } catch {
         problems.push("row amount is malformed");
       }
-      if (units !== null && units !== BigInt(pi.amount_received) * UNITS_PER_CENT) {
-        problems.push(`credited ${row.reward_point} $BTR for ${pi.amount_received} cents (peg $0.10)`);
+      // Since 2026-10-11 the buyer also pays Stripe's card fee, recorded on
+      // the intent as metadata fee_cents; only the rest buys $BTR. A fee can
+      // only lower what's credited, never raise it above the peg.
+      const feeRaw = pi.metadata?.fee_cents ?? "0";
+      const fee = /^[0-9]+$/.test(feeRaw) ? BigInt(feeRaw) : null;
+      const priceCents = fee === null ? null : BigInt(pi.amount_received) - fee;
+      if (priceCents === null || priceCents <= 0n) {
+        problems.push(`processing fee ${feeRaw} is malformed for ${pi.amount_received} cents`);
+      } else if (units !== null && units !== priceCents * UNITS_PER_CENT) {
+        problems.push(`credited ${row.reward_point} $BTR for ${priceCents} cents of price (${pi.amount_received} paid, ${fee} fee; peg $0.10)`);
       }
     }
     if (problems.length) {
