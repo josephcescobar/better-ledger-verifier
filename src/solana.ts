@@ -77,7 +77,10 @@ export async function readChainAnchors(url: string, address: string, cache: Anch
     if (sig.err) continue;
     const tx = await rpc<ParsedTx | null>(url, "getTransaction", [
       sig.signature,
-      { encoding: "jsonParsed", commitment: "finalized", maxSupportedTransactionVersion: 0 },
+      // Anyone can send to the wallet, in any transaction version (a v1
+      // dust spam on 2026-10-14 made the RPC refuse at 0 and stopped the
+      // anchors check). Accept v1; non-anchors are ignored below anyway.
+      { encoding: "jsonParsed", commitment: "finalized", maxSupportedTransactionVersion: 1 },
     ]);
     if (!tx) throw new Error(`Solana RPC returned no transaction for ${sig.signature}`);
     const memo = anchorMemoOf(tx, address);

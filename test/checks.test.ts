@@ -4,7 +4,7 @@ import { checkChain } from "../src/checks/chain.ts";
 import { checkAnchors, parseMemo } from "../src/checks/anchors.ts";
 import { checkRules } from "../src/checks/rules.ts";
 import { planAlerts } from "../src/alerts.ts";
-import { anchorMemoOf } from "../src/solana.ts";
+import { anchorMemoOf, readChainAnchors } from "../src/solana.ts";
 import { signReport, verifyReport } from "../src/report.ts";
 import { generateKeyPairSync } from "node:crypto";
 import { NOW, SECRET, anchorAt, config, rawRows, seal, snapshot } from "./helpers.ts";
@@ -144,6 +144,49 @@ test("only the anchoring wallet's own signed memos count", () => {
   assert.equal(anchorMemoOf(tx(config.anchorAddress, true), config.anchorAddress), "BTR1|x");
   assert.equal(anchorMemoOf(tx("SomeoneElse111111111111111111111111111111111", true), config.anchorAddress), null);
   assert.equal(anchorMemoOf(tx(config.anchorAddress, false), config.anchorAddress), null);
+});
+
+test("a v1 transaction to the wallet (dust spam) is read and skipped, not a failure", async () => {
+  const addr = config.anchorAddress;
+  const txs: Record<string, unknown> = {
+    spam: {
+      slot: 2, blockTime: 2, version: 1, meta: { err: null },
+      transaction: { message: {
+        accountKeys: [{ pubkey: "Spammer1111111111111111111111111111111111111", signer: true }, { pubkey: addr, signer: false }],
+        instructions: [{ programId: "11111111111111111111111111111111", parsed: { type: "transfer" } }],
+      } },
+    },
+    anchor: {
+      slot: 1, blockTime: 1, version: "legacy", meta: { err: null },
+      transaction: { message: {
+        accountKeys: [{ pubkey: addr, signer: true }],
+        instructions: [{ programId: "MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr", parsed: "BTR1|x" }],
+      } },
+    },
+  };
+  const realFetch = globalThis.fetch;
+  globalThis.fetch = (async (_url: unknown, init: { body: string }) => {
+    const { method, params } = JSON.parse(init.body);
+    if (method === "getSignaturesForAddress") {
+      return new Response(JSON.stringify({ result: [
+        { signature: "spam", slot: 2, err: null, blockTime: 2 },
+        { signature: "anchor", slot: 1, err: null, blockTime: 1 },
+      ] }));
+    }
+    // Mirrors the RPC: refuses a v1 transaction unless the caller accepts v1.
+    const tx = txs[params[0]] as { version: number | string };
+    if (tx.version === 1 && !(params[1].maxSupportedTransactionVersion >= 1)) {
+      return new Response(JSON.stringify({ error: { message: "Transaction version (1) is not supported" } }));
+    }
+    return new Response(JSON.stringify({ result: tx }));
+  }) as typeof fetch;
+  try {
+    const out = await readChainAnchors("http://rpc", addr, { newest_sig: null, anchors: [] });
+    assert.deepEqual(out.anchors.map((a) => a.tx_sig), ["anchor"]);
+    assert.equal(out.newest_sig, "spam");
+  } finally {
+    globalThis.fetch = realFetch;
+  }
 });
 
 test("signed reports verify, and a changed report does not", () => {
