@@ -29,7 +29,9 @@
       "TOOLTIP_EARN": 10
     },
     "maxCreditBtr": "10000",
-    "maxCreditBtrByType": {},
+    "maxCreditBtrByType": {
+      "BTR_PURCHASE": "5000"
+    },
     "adminSourcePrefixes": ["early_adopter_arm:", "admin:"],
     "adminRewardTypes": ["EARLY_ADOPTER_RESET"],
     "adminAlertHours": 24
