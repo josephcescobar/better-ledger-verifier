@@ -189,6 +189,19 @@ test("a v1 transaction to the wallet (dust spam) is read and skipped, not a fail
   }
 });
 
+test("a one-time reward reversed and granted again is not a repeat", () => {
+  const base = { user_id: "aaaaaaaa-0000-4000-8000-000000000002", source_id: null as string | null };
+  const at = (h: number) => new Date(Date.UTC(2026, 9, 15, h));
+  const rows = [
+    { ...base, reward_id: "g1", reward_type: "EARLY_ADOPTER_BONUS", reward_point: "100", sign: 1, created_at: at(1) },
+    { ...base, reward_id: "g2", reward_type: "EARLY_ADOPTER_BONUS", reward_point: "100", sign: -1, created_at: at(2) },
+    { ...base, reward_id: "g3", reward_type: "EARLY_ADOPTER_BONUS", reward_point: "100", sign: 1, created_at: at(3) },
+  ];
+  assert.equal(checkRules(rows, config, NOW).length, 0);
+  // Without the reversal it is still a repeat.
+  assert.equal(checkRules([rows[0], rows[2]], config, NOW)[0]?.detail?.rule, "one-time-repeated");
+});
+
 test("signed reports verify, and a changed report does not", () => {
   const { privateKey, publicKey } = generateKeyPairSync("ed25519");
   const signed = signReport({ ok: true }, privateKey.export({ format: "der", type: "pkcs8" }).toString("base64"));

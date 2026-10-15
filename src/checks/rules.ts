@@ -70,6 +70,14 @@ export function checkRules(rows: Row[], config: Config, dbNow: Date): Finding[] 
       }
     }
 
+    // A one-time reward that was reversed (a sign -1 correction of the same
+    // type) and granted again later is not a repeat (2026-10-15: an early
+    // adopter removed by mistake and restored).
+    if (row.sign === -1 && oneTime.has(row.reward_type)) {
+      const k = `${row.user_id}|${row.reward_type}`;
+      oneTimeSeen.set(k, Math.max(0, (oneTimeSeen.get(k) ?? 0) - 1));
+    }
+
     const admin = adminTypes.has(row.reward_type) || r.adminSourcePrefixes.some((p) => row.source_id?.startsWith(p));
     if (admin && row.created_at.getTime() >= adminSince) {
       hit("admin-write", "warning", `an admin-path row was written in the last ${r.adminAlertHours} hours`, row);
