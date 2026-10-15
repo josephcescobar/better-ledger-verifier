@@ -20,7 +20,8 @@
       "TX_PASSWORD_SET",
       "RECOVERY_EMAIL_SET",
       "YUBIKEY_CONNECT",
-      "CREATOR_SIGNUP"
+      "CREATOR_SIGNUP",
+      "X_VERIFIED"
     ],
     "dailyWindowStartHourUtc": 12,
     "dailyCaps": {
