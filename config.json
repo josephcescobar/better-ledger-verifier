@@ -30,7 +30,8 @@
     },
     "maxCreditBtr": "10000",
     "maxCreditBtrByType": {
-      "BTR_PURCHASE": "5000"
+      "BTR_PURCHASE": "5000",
+      "CREATOR_SERVICE": "9500"
     },
     "adminSourcePrefixes": ["early_adopter_arm:", "admin:"],
     "adminRewardTypes": ["EARLY_ADOPTER_RESET"],

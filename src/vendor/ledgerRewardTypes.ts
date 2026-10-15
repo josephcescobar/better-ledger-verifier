@@ -45,6 +45,10 @@ export const LEDGER_REWARD_TYPES = [
   // Partake
   "PARTAKE_CLAIM",
   "BTR_SPEND_PARTAKE",
+  // Creator Services (2026-10-14): on release the buyer is debited the
+  // paid amount, the creator credited it minus the 5% fee. source_id = order.
+  "CREATOR_SERVICE",
+  "BTR_SPEND_CREATOR_SERVICE",
   // Spends: store, events, handles, Legends
   "STORE_PURCHASE",
   "STORE_CREDIT",
