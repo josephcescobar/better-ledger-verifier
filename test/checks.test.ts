@@ -200,6 +200,9 @@ test("a one-time reward reversed and granted again is not a repeat", () => {
   assert.equal(checkRules(rows, config, NOW).length, 0);
   // Without the reversal it is still a repeat.
   assert.equal(checkRules([rows[0], rows[2]], config, NOW)[0]?.detail?.rule, "one-time-repeated");
+  // A partial take-back (1 of 100) cancels nothing: still a repeat.
+  const partial = [rows[0], { ...rows[1], reward_point: "1" }, rows[2]];
+  assert.equal(checkRules(partial, config, NOW)[0]?.detail?.rule, "one-time-repeated");
 });
 
 test("signed reports verify, and a changed report does not", () => {

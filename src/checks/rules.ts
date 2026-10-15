@@ -26,7 +26,8 @@ export function checkRules(rows: Row[], config: Config, dbNow: Date): Finding[] 
 
   const balances = new Map<string, bigint>();
   const oneTime = new Set(r.oneTimePerUser);
-  const oneTimeSeen = new Map<string, number>();
+  // Outstanding (not reversed) credits per account and one-time type, by amount.
+  const oneTimeSeen = new Map<string, bigint[]>();
   const daily = new Map<string, number>();
   const windowOffset = r.dailyWindowStartHourUtc * 3_600_000;
   const adminTypes = new Set(r.adminRewardTypes);
@@ -55,9 +56,10 @@ export function checkRules(rows: Row[], config: Config, dbNow: Date): Finding[] 
 
       if (oneTime.has(row.reward_type)) {
         const k = `${row.user_id}|${row.reward_type}`;
-        const n = (oneTimeSeen.get(k) ?? 0) + 1;
-        oneTimeSeen.set(k, n);
-        if (n > 1) hit("one-time-repeated", "warning", "a one-time reward was credited more than once to the same account", row);
+        const credits = oneTimeSeen.get(k) ?? [];
+        credits.push(units);
+        oneTimeSeen.set(k, credits);
+        if (credits.length > 1) hit("one-time-repeated", "warning", "a one-time reward was credited more than once to the same account", row);
       }
 
       const cap = r.dailyCaps[row.reward_type];
@@ -70,12 +72,14 @@ export function checkRules(rows: Row[], config: Config, dbNow: Date): Finding[] 
       }
     }
 
-    // A one-time reward that was reversed (a sign -1 correction of the same
-    // type) and granted again later is not a repeat (2026-10-15: an early
-    // adopter removed by mistake and restored).
+    // A one-time reward that was reversed IN FULL (a sign -1 correction of
+    // the same type and the same amount as an earlier credit) and granted
+    // again later is not a repeat (2026-10-15: an early adopter removed by
+    // mistake and restored). A partial take-back cancels nothing.
     if (row.sign === -1 && oneTime.has(row.reward_type)) {
-      const k = `${row.user_id}|${row.reward_type}`;
-      oneTimeSeen.set(k, Math.max(0, (oneTimeSeen.get(k) ?? 0) - 1));
+      const credits = oneTimeSeen.get(`${row.user_id}|${row.reward_type}`);
+      const i = credits ? credits.indexOf(units) : -1;
+      if (credits && i >= 0) credits.splice(i, 1);
     }
 
     const admin = adminTypes.has(row.reward_type) || r.adminSourcePrefixes.some((p) => row.source_id?.startsWith(p));
