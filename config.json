@@ -21,7 +21,8 @@
       "RECOVERY_EMAIL_SET",
       "YUBIKEY_CONNECT",
       "CREATOR_SIGNUP",
-      "X_VERIFIED"
+      "X_VERIFIED",
+      "YOUTUBE_VERIFIED"
     ],
     "dailyWindowStartHourUtc": 12,
     "dailyCaps": {

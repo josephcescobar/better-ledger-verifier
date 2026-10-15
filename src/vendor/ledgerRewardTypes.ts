@@ -18,6 +18,7 @@ export const LEDGER_REWARD_TYPES = [
   "RECOVERY_EMAIL_SET",
   "YUBIKEY_CONNECT",
   "X_VERIFIED",
+  "YOUTUBE_VERIFIED",
   "PRO_SIGNUP",
   "LEADERBOARD_BONUS",
   // Early adopter campaign
