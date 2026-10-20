@@ -65,6 +65,9 @@ export const LEDGER_REWARD_TYPES = [
   "IRL_BOUNTY",
   "BTR_SPEND_IRL_BOUNTY",
   "BTR_SPEND_IRL_CANCEL",
+  // Tip a friend (2026-10-20): paired rows, same source_id "tip:<uuid>".
+  "TIP_SENT",
+  "TIP_RECEIVED",
 ] as const;
 
 export type LedgerRewardType = (typeof LEDGER_REWARD_TYPES)[number];
