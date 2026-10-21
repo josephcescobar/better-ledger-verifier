@@ -34,7 +34,8 @@
     "maxCreditBtrByType": {
       "BTR_PURCHASE": "5000",
       "CREATOR_SERVICE": "9500",
-      "TIP_RECEIVED": "10"
+      "TIP_RECEIVED": "10",
+      "SHARE_SOCIAL": "1"
     },
     "adminSourcePrefixes": ["early_adopter_arm:", "admin:"],
     "adminRewardTypes": ["EARLY_ADOPTER_RESET"],
