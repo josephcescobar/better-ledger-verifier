@@ -212,3 +212,70 @@ test("signed reports verify, and a changed report does not", () => {
   assert.equal(verifyReport(signed, pub), true);
   assert.equal(verifyReport({ ...signed, report: JSON.stringify({ ok: false }) }, pub), false);
 });
+
+// ── Gold Nº reconciliation (2026-10-24) ─────────────────────────────────
+import { reconcileGold, type PaymentIntent } from "../src/checks/stripe.ts";
+import { USERS } from "./helpers.ts";
+import type { UnsealedRow } from "../src/types.ts";
+
+const goldPi = (id: string, over: Partial<PaymentIntent> = {}): PaymentIntent => ({
+  id,
+  status: "succeeded",
+  amount_received: 49999,
+  created: Math.floor(NOW.getTime() / 1000) - 7200,
+  metadata: { purpose: "gold_membership", user_id: USERS[0] },
+  latest_charge: { refunded: false, amount_refunded: 0, disputed: false },
+  ...over,
+});
+const goldRow = (pi: string, over: Partial<UnsealedRow> = {}): UnsealedRow => ({
+  reward_id: `r-${pi}`,
+  user_id: USERS[0],
+  reward_type: "GOLD_MEMBERSHIP_REBATE",
+  reward_point: "4999.9000",
+  sign: 1,
+  source_id: `stripe_gold:${pi}`,
+  created_at: NOW,
+  ...over,
+});
+const gold = (rows: UnsealedRow[], intents: PaymentIntent[]) =>
+  reconcileGold({
+    rows,
+    byId: new Map(intents.map((p) => [p.id, p])),
+    verified: new Set(),
+    nowSec: Math.floor(NOW.getTime() / 1000),
+    graceSec: 15 * 60,
+  });
+
+test("a Gold payment with its one matching rebate passes", () => {
+  assert.deepEqual(gold([goldRow("pi_g1")], [goldPi("pi_g1")]).findings, []);
+});
+
+test("a Gold rebate that doesn't match the amount paid is critical", () => {
+  const r = gold([goldRow("pi_g2", { reward_point: "5999.9000" })], [goldPi("pi_g2")]);
+  assert.equal(r.findings[0]?.severity, "critical");
+  assert.match(r.findings[0]?.key ?? "", /^gold-mismatch:/);
+});
+
+test("a Gold rebate for another account's payment is critical", () => {
+  const r = gold([goldRow("pi_g3", { user_id: USERS[1] })], [goldPi("pi_g3")]);
+  assert.match(r.findings[0]?.key ?? "", /^gold-mismatch:/);
+});
+
+test("a paid Gold payment without a rebate is flagged, unless refunded in full", () => {
+  assert.match(gold([], [goldPi("pi_g4")]).findings[0]?.key ?? "", /^gold-paid-not-credited:/);
+  const refunded = goldPi("pi_g5", { latest_charge: { refunded: true, amount_refunded: 49999, disputed: false } });
+  assert.deepEqual(gold([], [refunded]).findings, []);
+});
+
+test("a Gold rebate credited twice is critical", () => {
+  const r = gold([goldRow("pi_g6"), goldRow("pi_g6", { reward_id: "r-dup" })], [goldPi("pi_g6")]);
+  assert.ok(r.findings.some((f) => f.key.startsWith("gold-credited-twice:")));
+});
+
+test("a disputed Gold payment stays open until its rebate is reversed", () => {
+  const disputed = goldPi("pi_g7", { latest_charge: { refunded: false, amount_refunded: 0, disputed: true } });
+  const open = gold([goldRow("pi_g7")], [disputed]);
+  assert.equal(open.open, 1);
+  const reversal: UnsealedRow = { ...goldRow("pi_g7"), reward_id: "r-rev", reward_type: "CARD_REBATE_REVERSAL", sign: -1 };
+  assert.equal(gold([goldRow("pi_g7"), reversal], [disputed]).open, 0);
+});
