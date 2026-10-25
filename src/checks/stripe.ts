@@ -57,6 +57,8 @@ async function listIntents(key: string, sinceSec: number): Promise<PaymentIntent
 export type StripeState = { verified_purchase_rows: string[] };
 
 export const GOLD_REBATE_TYPE = "GOLD_MEMBERSHIP_REBATE";
+// The app locks every card rebate for 120 days (lib/btrBalance REBATE_LOCK_DAYS).
+const GOLD_LOCK_DAYS = 120;
 const GOLD_SOURCE_PREFIX = "stripe_gold:";
 
 /**
@@ -314,11 +316,15 @@ export async function checkStripe(input: {
     }
   }
 
-  // Gold Nº: Gold payments in the window, plus older ones an unverified
-  // rebate row points at.
+  // Gold Nº: Gold payments in the window, plus older ones a rebate row points
+  // at when that row is unverified OR still inside its 120-day lock, so a
+  // late chargeback (day 31-120, the window the lock exists for) is still
+  // caught here (security audit 2026-10-25).
   const goldById = new Map(allIntents.filter((pi) => pi.metadata?.purpose === "gold_membership").map((pi) => [pi.id, pi]));
+  const lockSince = dbNow.getTime() - GOLD_LOCK_DAYS * 86_400_000;
   for (const row of input.rows) {
-    if (row.reward_type !== GOLD_REBATE_TYPE || verified.has(row.reward_id)) continue;
+    if (row.reward_type !== GOLD_REBATE_TYPE) continue;
+    if (verified.has(row.reward_id) && new Date(row.created_at).getTime() < lockSince) continue;
     const piId = row.source_id?.startsWith(GOLD_SOURCE_PREFIX) ? row.source_id.slice(GOLD_SOURCE_PREFIX.length) : null;
     if (!piId?.startsWith("pi_") || goldById.has(piId)) continue;
     const pi = await stripeGet<PaymentIntent | null>(key, `payment_intents/${piId}`, { "expand[]": "latest_charge" });

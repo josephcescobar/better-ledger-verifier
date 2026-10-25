@@ -22,8 +22,7 @@
       "YUBIKEY_CONNECT",
       "CREATOR_SIGNUP",
       "X_VERIFIED",
-      "YOUTUBE_VERIFIED",
-      "GOLD_MEMBERSHIP_REBATE"
+      "YOUTUBE_VERIFIED"
     ],
     "dailyWindowStartHourUtc": 12,
     "dailyCaps": {
