@@ -22,7 +22,8 @@
       "YUBIKEY_CONNECT",
       "CREATOR_SIGNUP",
       "X_VERIFIED",
-      "YOUTUBE_VERIFIED"
+      "YOUTUBE_VERIFIED",
+      "GOLD_MEMBERSHIP_REBATE"
     ],
     "dailyWindowStartHourUtc": 12,
     "dailyCaps": {
@@ -33,6 +34,7 @@
     "maxCreditBtr": "10000",
     "maxCreditBtrByType": {
       "BTR_PURCHASE": "5000",
+      "GOLD_MEMBERSHIP_REBATE": "5000",
       "CREATOR_SERVICE": "9500",
       "TIP_RECEIVED": "10",
       "SHARE_SOCIAL": "1"

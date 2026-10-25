@@ -36,6 +36,9 @@ export const LEDGER_REWARD_TYPES = [
   "PRO_PURCHASE",
   "PRO_RENEWAL_BONUS",
   "VERIFICATION_FEE_REBATE",
+  // Gold Nº bought by card (2026-10-24): the price back in $BTR, once per
+  // account, source_id stripe_gold:<PaymentIntent id>.
+  "GOLD_MEMBERSHIP_REBATE",
   // Funded bounties (escrow) and their reversals
   "DAPP_BOUNTY",
   "DAPP_BOUNTY_REVOKED",
