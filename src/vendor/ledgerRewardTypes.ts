@@ -72,6 +72,10 @@ export const LEDGER_REWARD_TYPES = [
   // Tip a friend (2026-10-20): paired rows, same source_id "tip:<uuid>".
   "TIP_SENT",
   "TIP_RECEIVED",
+  // Legends mint (2026-10-25): a paid mint debits 249.9 $BTR; a failed mint
+  // credits it back. source_id legend_mint:<LegendMint id>.
+  "LEGEND_MINT",
+  "LEGEND_MINT_REFUND",
 ] as const;
 
 export type LedgerRewardType = (typeof LEDGER_REWARD_TYPES)[number];
