@@ -1,7 +1,11 @@
 // Every reward_type a Rewards row may carry (ledger master plan, Stage B4).
-// The ledger verifier flags any row whose type is not listed here, so a
-// new earn or spend path must add its type in the same commit. Legacy
-// types stay listed so their historical rows keep verifying.
+// lib/ledger/ is the ledger's one source of truth (2026-11-14): a new earn
+// or spend path adds its type here in the same commit, and
+// tests/ledger/rewardTypes.test.ts fails if code writes a type that isn't
+// listed. The independent verifier (better-ledger-verifier) keeps a reviewed
+// copy of this file: every run compares it with this one and reports the
+// drift until its sync pull request is merged. Legacy types stay listed so
+// their historical rows keep verifying.
 export const LEDGER_REWARD_TYPES = [
   // Platform rewards (USD-anchored, tiered for free members)
   "DAILY_CHECKIN",
