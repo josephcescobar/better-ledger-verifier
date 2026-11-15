@@ -3,6 +3,7 @@ import { join } from "node:path";
 import { planAlerts, deliver, type AlertState } from "./alerts.ts";
 import { checkAnchors } from "./checks/anchors.ts";
 import { checkChain } from "./checks/chain.ts";
+import { checkDrift } from "./checks/drift.ts";
 import { checkRules } from "./checks/rules.ts";
 import { checkStripe, type StripeState } from "./checks/stripe.ts";
 import { readSnapshot } from "./db.ts";
@@ -112,6 +113,15 @@ async function runChecks(env: NodeJS.ProcessEnv, config: Config, state: State) {
 
   const allRows = [...snap.sealed, ...snap.unsealed];
   findings.push(...checkRules(allRows, config, snap.db_now));
+
+  // The app's ledger files vs this verifier's reviewed copy (checks/drift.ts).
+  try {
+    const d = await checkDrift({ token: env.APP_READ_TOKEN });
+    findings.push(...d.findings);
+    sections.drift = { checked: Boolean(env.APP_READ_TOKEN), drifted: d.drifted };
+  } catch (err) {
+    opError("drift", err);
+  }
 
   sections.stripe = { checked: false };
   if (env.STRIPE_READ_KEY) {

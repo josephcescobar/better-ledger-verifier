@@ -10,7 +10,9 @@ An independent check of the BETTER $BTR ledger, run outside Vercel and Supabase.
 
 Each run writes a signed report (`latest.json`, Ed25519) and its state to the `state` branch, sends alerts for new problems, and fails the Actions run on a critical finding or a check that couldn't run. GitHub's own failed-run email then works as a backup alert for the serious cases; warnings alert once and don't fail the run.
 
-It shares no code with the app at runtime. `src/vendor/` holds byte-identical copies of the app's encoder (`lib/ledger/canonical.ts`, `lib/ledger/trees.ts`, `lib/ledgerRewardTypes.ts`), and `test/fixtures.json` was produced by the app's own code, so `npm test` fails if the two ever disagree on a single byte.
+It shares no code with the app at runtime. The app's `lib/ledger/` is the one source of truth for the ledger; `src/vendor/` holds this verifier's reviewed copy of it (`canonical.ts`, `trees.ts`, and `rewardTypes.ts` as `ledgerRewardTypes.ts`), and `test/fixtures.json` was produced by the app's own code, so `npm test` fails if the two ever disagree on a single byte.
+
+The copy is never edited by hand. Every run compares it with the app's files on GitHub (`src/checks/drift.ts`) and reports any difference: a warning for the type list, critical for the encoder. Every hour `sync-vendor.yml` opens (or updates) a pull request copying the app's files over; merging it, after reviewing the diff, clears the drift. The app can't change the rules this verifier checks against without that approval here.
 
 ## Setup
 
@@ -25,6 +27,7 @@ It shares no code with the app at runtime. `src/vendor/` holds byte-identical co
 | `SOLANA_RPC_URL` | Mainnet RPC from a provider other than Helius (e.g. Alchemy Solana) |
 | `LEDGER_SALT_SECRET` | Same value as the app's. Optional: without it the balance root is skipped (totals and account counts are still checked) |
 | `STRIPE_READ_KEY` | Restricted key, read-only on PaymentIntents and Charges. Optional |
+| `APP_READ_TOKEN` | Fine-grained GitHub token, **Contents: Read-only** on `BETTER-Web3-Co/betterweb3` only, for the drift check and the sync pull request. Optional: without it the drift check reports itself off (info, no alert) |
 | `VERIFIER_SIGNING_KEY` | From `npm run keygen` |
 | `RESEND_API_KEY` | Sending-only Resend key, for email alerts |
 | `ALERT_WEBHOOK_URL` | Slack or Discord incoming webhook. Optional |
@@ -40,11 +43,11 @@ It shares no code with the app at runtime. `src/vendor/` holds byte-identical co
 npm test                                # encoder parity + check logic
 npm run typecheck
 npm run verify                          # one run; needs the env vars above (see .env.example)
-node scripts/check-drift.ts ../betterweb3    # vendor copies still identical to the app?
+node scripts/check-drift.ts ../betterweb3    # vendor copies still identical to the app? (--write copies them)
 node scripts/gen-fixtures.ts ../betterweb3   # only for a deliberate new encoding version
 ```
 
-When the app adds a reward type, copy `lib/ledgerRewardTypes.ts` into `src/vendor/`. When it adds a one-time reward or a daily cap, add it to `config.json`.
+When the app adds a reward type, the sync pull request brings it in: review and merge it. When it adds a one-time reward or a daily cap, add it to `config.json`.
 
 ## Severity
 

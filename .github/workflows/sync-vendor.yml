@@ -1,0 +1,71 @@
+name: Sync ledger files from the app
+
+# One source of truth for the ledger: the app's lib/ledger/. When it changes,
+# this opens (or updates) a pull request copying the files into src/vendor/,
+# so the copy here is never edited by hand and never changes without someone
+# approving it. Until it is merged, every verify run reports the drift.
+
+on:
+  schedule:
+    - cron: "17 * * * *" # hourly
+  workflow_dispatch:
+
+concurrency:
+  group: sync-vendor
+  cancel-in-progress: false
+
+permissions:
+  contents: write # push the sync branch
+  pull-requests: write # open the pull request
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+
+      # Read-only: a fine-grained token with Contents: read on the app repo only.
+      - uses: actions/checkout@v7
+        with:
+          repository: BETTER-Web3-Co/betterweb3
+          ref: master
+          token: ${{ secrets.APP_READ_TOKEN }}
+          path: app
+          sparse-checkout: |
+            lib/ledger
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+
+      - run: npm ci
+
+      - name: Copy the app's ledger files
+        id: copy
+        run: |
+          node scripts/check-drift.ts app --write
+          rm -rf app
+          if git diff --quiet; then echo "changed=false" >> "$GITHUB_OUTPUT"; else echo "changed=true" >> "$GITHUB_OUTPUT"; fi
+
+      - name: Test the new copy
+        if: steps.copy.outputs.changed == 'true'
+        run: npm test && npm run typecheck
+
+      - name: Open or update the pull request
+        if: steps.copy.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git config user.name "ledger-verifier"
+          git config user.email "ledger-verifier@users.noreply.github.com"
+          git checkout -B sync/app-ledger
+          git add src/vendor
+          git commit -q -m "Sync ledger files from the app (BETTER-Web3-Co/betterweb3 master)"
+          git push -q -f origin sync/app-ledger
+          if [ -z "$(gh pr list --head sync/app-ledger --state open --json number --jq '.[0].number')" ]; then
+            gh pr create --head sync/app-ledger --base main \
+              --title "Sync ledger files from the app" \
+              --body "The app's \`lib/ledger/\` changed. Review the diff before merging: new reward types are expected; any change to \`canonical.ts\` or \`trees.ts\` must come with a new encoding version and new fixtures. Until this is merged, every verify run reports the drift."
+          fi
