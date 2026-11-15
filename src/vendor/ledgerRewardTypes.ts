@@ -76,6 +76,14 @@ export const LEDGER_REWARD_TYPES = [
   // credits it back. source_id legend_mint:<LegendMint id>.
   "LEGEND_MINT",
   "LEGEND_MINT_REFUND",
+  // BouncyHouse (2026-11-14): debits only (sign -1), source_id
+  // bouncyhouse_order:<order id>. The $BTR is held (reserved) first and only
+  // debited once the thing paid for happens, so nothing is ever credited back.
+  // A speaker or co-host seat, debited when the invite goes out.
+  "BOUNCYHOUSE_SEAT",
+  // A Space: sponsored (debited when it goes live), booked (when it goes
+  // live, or on a cancel inside 24 hours), or added time (when its slot starts).
+  "BOUNCYHOUSE_SPACE",
 ] as const;
 
 export type LedgerRewardType = (typeof LEDGER_REWARD_TYPES)[number];
