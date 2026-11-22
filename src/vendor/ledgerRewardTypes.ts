@@ -17,6 +17,9 @@ export const LEDGER_REWARD_TYPES = [
   "SHARE_BETTER",
   "SHARE_BETTER_REVOKED",
   "SHARE_SOCIAL",
+  // Share the BouncyHouse (2026-11-21, lib/station/share.ts): paid after the
+  // post has stayed up 24 hours; source_id = the post's URL.
+  "SHARE_BOUNCYHOUSE",
   "CREATOR_SIGNUP",
   "PREMIUM_LISTING",
   "TX_PASSWORD_SET",
