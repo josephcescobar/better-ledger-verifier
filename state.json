@@ -1,6 +1,6 @@
 {
   "anchors": {
-    "newest_sig": "4GhJAU71udgB3RCChHFnDXexGjC6DKmMB5t7mhH8yNSLUwz7M2T4V531vpP9pGyStm7rK44opZJ8FFrBBZVJug9G",
+    "newest_sig": "WcjVbdwLKzhrD8ceoFQUizLrHD8YYNkc7eeryDovKWWZG1aSGPaTBg6in5R52YtXrCxmvTXkcacura4FzvxtciF",
     "anchors": [
       {
         "tx_sig": "2dh2scHQewmwgeL65vKE1SXewJQsXfU9FmSwBt3z9mU4meS7kKkNoHMVU4ZNaNidULAFkmPXFvYmqyvxm6T4N9ko",
@@ -2449,6 +2449,12 @@
         "slot": 473342676,
         "block_time": 1795522932,
         "memo": "BTR1|mainnet|408|1285|91b685c9929d67544569042f096dd6c2af65d89a097ace1ce19c89cb238ae454|0aa119b9a1320de7f6811a6360e7a72dc4be59ecd203903471b290379dabaccf|6472960fe2693dc53e1868f82581bd29c844755c0e090cdcca6d2da55f285fef|75552500|74|1"
+      },
+      {
+        "tx_sig": "WcjVbdwLKzhrD8ceoFQUizLrHD8YYNkc7eeryDovKWWZG1aSGPaTBg6in5R52YtXrCxmvTXkcacura4FzvxtciF",
+        "slot": 473464057,
+        "block_time": 1795549031,
+        "memo": "BTR1|mainnet|409|1286|0d24619e133ed1419bd48d10d8efbd2355782ecc72f19ee29c66e58fa23fed60|81384b20a8258e446a56ffe5b66ddce9055f28ae1167d68b9666b38e4af1535c|b89f00c7287fd12413885e4e471dd9b04f46b5954a409415bb1e149260c9899e|75553500|74|1"
       }
     ]
   },
